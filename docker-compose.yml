@@ -26,4 +26,6 @@ services:
     environment:
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_HOST_AUTH_METHOD=trust' #postgresqlをローカルではなく、サーバー上で構築しようとした場合、この環境変数を定義しないとうまく動作しない事がある。
+      #今回の場合は、travisci上（サーバー）でpostgresqlのDBを立ち上げる動作が必要になるので、この環境変数が必要。
     

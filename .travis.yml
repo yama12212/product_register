@@ -1,0 +1,16 @@
+sudo: required #権限の設定。スーパーユーザーが実行するようにしている
+
+services: docker #dockerのサービスを使うということを宣言
+
+before_install:
+  - docker-compose up --build -d #travisci上でコンテナを起動させる。これで起動させたコンテナを使って、以下のテストを実行する。
+  #要は、テスト実行に必要なやりたいことを順番に並べてスクリプトを書いていくイメージ
+  
+  #dockerを使用しなかった場合、before_installの段階で、travisciで全く同じ環境を構築するために、railsのインストールやpostgresqlのインストール手順を書かなければならない。
+
+script:
+  #docker-compose exec webでコンテナ内でコマンドを実行する（rails db:create/db:migrate/test）。
+  #その際、test環境のコードを使うようにするため、--env 'RAILS_ENV=test'の環境変数を加えている。
+  - docker-compose exec --env 'RAILS_ENV=test' web rails db:create 
+  - docker-compose exec --env 'RAILS_ENV=test' web rails db:migrate
+  - docker-compose exec --env 'RAILS_ENV=test' web rails test
