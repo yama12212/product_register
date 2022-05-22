@@ -83,11 +83,12 @@ test:
 #
 # You can use this database configuration with:
 #
-#   production:
-#     url: <%= ENV['DATABASE_URL'] %>
-#
 production:
-  <<: *default
-  database: product-register_production
-  username: product-register
-  password: <%= ENV['PRODUCT-REGISTER_DATABASE_PASSWORD'] %>
+  url: <%= ENV['postgres://iervsarfthfxtz:151d7f17aa8d185e6d23bc0ca0a295a7d2847e26cb672bba62803128bb898d7d@ec2-44-194-117-205.compute-1.amazonaws.com:5432/d1l975faqb1u8v'] %> 
+  #ここにherokuで取得したpostgresqlのURLを書き込む
+#
+# production:  コメントアウト
+#   <<: *default
+#   database: product-register_production
+#   username: product-register
+#   password: <%= ENV['PRODUCT-REGISTER_DATABASE_PASSWORD'] %>

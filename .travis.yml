@@ -5,6 +5,10 @@ services: docker #dockerのサービスを使うということを宣言
 before_install:
   - docker-compose up --build -d #travisci上でコンテナを起動させる。これで起動させたコンテナを使って、以下のテストを実行する。
   #要は、テスト実行に必要なやりたいことを順番に並べてスクリプトを書いていくイメージ
+  - docker login -u "$HEROKU_USERNAME" -p "$HEROKU_API_KEY" registry.heroku.com
+  #production（今回はherokuにデプロイする）用に必要となるコード。heroku側で用意しているdockerにログインし、そこにimageをpushできるようにする。
+  #$HEROKU_USERNAME、$HEROKU_API_KEYは、travisciのtravisci上で同期したアプリ名→more options→setting⇨Environment Variableで設定する
+  #$HEROKU_API_KEYは、ターミナル上で$ heroku authorizations:createを入力すると、tokenという項目があるので、その値を使用する。
   
   #dockerを使用しなかった場合、before_installの段階で、travisciで全く同じ環境を構築するために、railsのインストールやpostgresqlのインストール手順を書かなければならない。
 
@@ -14,3 +18,19 @@ script:
   - docker-compose exec --env 'RAILS_ENV=test' web rails db:create 
   - docker-compose exec --env 'RAILS_ENV=test' web rails db:migrate
   - docker-compose exec --env 'RAILS_ENV=test' web rails test
+
+deploy: #herokuにデプロイする際に行うコードを記述
+  provider: script
+  script:
+    #deploy-scriptという構成の場合は、続けてコードを書く場合は「-」ではなく「;」を使用して続ける
+    docker build -t registry.heroku.com/$HEROKU_APP_NAME/web -f Dockerfile.prod .;
+    #heroku上でdocker buildを実行するが、image名をregistry.heroku.com/$HEROKU_APP_NAME/webという名前にし、Dockerfileはproduction用のファイルを指定している。
+    docker push registry.heroku.com/$HEROKU_APP_NAME/web;
+    #heroku上のdockerレジストリにpushする
+    heroku run --app $HEROKU_APP_NAME rails db:migrate;
+    #この時点で、travisはherokuのコマンドが使える状態なので、heroku runができる。ログインする必要があるのだが、HEROKU_API_KEYが設定されているので、それを見て自動ログインしてくれる
+    #--appで、どのアプリをrunするか指定する。db:createは、heroku上でpostgresqlが既に作られているので、コマンドは必要ない。
+    #$HEROKU_APP_NAMEは、herokuアプリで作成した名前をtravisciの環境変数に設定する。
+  on:
+    branch: master
+    #masterブランチがマージされた時だけデプロイする。
